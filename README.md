@@ -1,93 +1,140 @@
 # SHA3
 
 
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Pseudo-code for SHA3 implementation
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/luongvilong2001/sha3.git
-git branch -M main
-git push -uf origin main
+SHA3(family):
+    PARAMETRES :
+        - output_length                          # output length in bits (224, 256, 384, 512) (l)
+        - state_size = 1600                      # total size of state in bits (s)
+        - rate = state_size - 2 * output_length  # rate (r = s - 2*l)
+        - capacity = state_size - rate           # capacity (c = s - r)
+        - rounds = 24                            # number of Keccak rounds
+
+    Initiate the `state` array to 0 (1600 bits)
+    RETURN SHA3_instance(rate, capacity, output_length, state, rounds)
 ```
 
-## Integrate with your tools
+```
+SHA3_Instance(rate, capacity, output_length, state, rounds):
+    METHODS :
+        Absorb(message):
+            - Add padding to the message according to `rate`
+            - Divide the message into blocks of size `rate` bits
+            - For each block :
+                - XOR the block with the corresponding part of the `state`
+                - Apply keccak_f(state, rounds)
+        
+        Squeeze():
+            - Initiate output = []
+            - While output_length > current_size(output):
+                - Add the first `rate` bits of the state to output
+                - If output_length > current_size(output):
+                    - Apply keccak_f(state, rounds)
+            - RETURN `output_length` bits
 
-- [ ] [Set up project integrations](https://gitlab.com/luongvilong2001/sha3/-/settings/integrations)
+        Compute(message):
+            Absorb(message)
+            RETURN Squeeze()
+```
 
-## Collaborate with your team
+```
+Padding(message, rate):
+    - Add one bit 1 to the end of the message
+    - Complete the message with bits 0 until the message size is a multiple of `rate` bits
+    - Replace the last bit of the last block with a bit 1
+    - RETURN the padded message
+```
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+```
+keccak_f(state, rounds):
+    FOR each round from 0 to rounds-1 :
+        - state = θ(state)
+        - state = ρ(state)
+        - state = π(state)
+        - state = χ(state)
+        - state = ι(state, round_index)
+    RETURN state
+```
 
-## Test and Deploy
+```
+θ(state):
+    # Initialize a parity array for each column
+    C[x] = XOR(state[x, 0], state[x, 1], state[x, 2], state[x, 3], state[x, 4]) for x = 0 to 4
 
-Use the built-in continuous integration in GitLab.
+    # Compute offsets for inter-column correction
+    D[x] = C[x-1] XOR ROTATE_LEFT(C[x+1], 1) for x = 0 to 4
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+    # Update each lane of status
+    FOR x = 0 to 4:
+        FOR y = 0 to 4:
+            state[x, y] = state[x, y] XOR D[x]
 
-***
+    RETURN state
+------------------------------------------------------------
+ρ(state):
+    # Initial rotation for position (0, 0) (no rotation here)
+    offsets[x, y] = Fixed values defined by Keccak specifications
 
-# Editing this README
+    FOR x = 0 to 4:
+        FOR y = 0 to 4:
+            # Apply a circular rotation of 'offsets[x, y]' bits to the lane
+            state[x, y] = ROTATE_LEFT(state[x, y], offsets[x, y])
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+    RETURN state
+------------------------------------------------------------
+π(state):
+    # Create a copy of the state
+    temp_state = Copy_of(state)
 
-## Suggestions for a good README
+    FOR x = 0 to 4:
+        FOR y = 0 to 4:
+            # Move each lane to a new position
+            new_x = y
+            new_y = (2 * x + 3 * y) mod 5
+            state[new_x, new_y] = temp_state[x, y]
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+    RETURN state
+------------------------------------------------------------
+χ(state):
+    FOR y = 0 to 4:
+        # Create a temporary copy of the line
+        temp_row = [state[x, y] for x = 0 to 4]
 
-## Name
-Choose a self-explaining name for your project.
+        FOR x = 0 to 4:
+            # Modify the lane according to the bits of neighboring lanes
+            state[x, y] = temp_row[x] XOR ((NOT temp_row[(x+1) mod 5]) AND temp_row[(x+2) mod 5])
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+    RETURN state
+------------------------------------------------------------
+ι(state, round_index):
+    # RC constants defined in the Keccak specification
+    RC[round_index] = Specific fixed values for each round
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+    # XOR round constant with lane (0, 0)
+    state[0, 0] = state[0, 0] XOR RC[round_index]
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+    RETURN state
+------------------------------------------------------------
+RC[] = 
+{
+    0x0000000000000001L, 0x0000000000008082L, 0x800000000000808aL,
+    0x8000000080008000L, 0x000000000000808bL, 0x0000000080000001L,
+    0x8000000080008081L, 0x8000000000008009L, 0x000000000000008aL,
+    0x0000000000000088L, 0x0000000080008009L, 0x000000008000000aL,
+    0x000000008000808bL, 0x800000000000008bL, 0x8000000000008089L,
+    0x8000000000008003L, 0x8000000000008002L, 0x8000000000000080L,
+    0x000000000000800aL, 0x800000008000000aL, 0x8000000080008081L,
+    0x8000000000008080L, 0x0000000080000001L, 0x8000000080008008L
+};
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+```
+Main():
+    - Read input file or binary data
+    - Select SHA3 family (224, 256, 384, 512)
+    - Initialize SHA3_instance with family parameters
+    - Call Compute(message) to calculate hash
+    - Display result in hexadecimal form
+```
