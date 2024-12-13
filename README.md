@@ -72,7 +72,7 @@ keccak_f(state, rounds):
             state[x, y] = state[x, y] XOR D[x]
 
     RETURN state
-------------------------------------------------------------
+----------------------------------------------------------------------------------------------
 ρ(state):
     # Initial rotation for position (0, 0) (no rotation here)
     offsets[x, y] = Fixed values defined by Keccak specifications
@@ -83,7 +83,7 @@ keccak_f(state, rounds):
             state[x, y] = ROTATE_LEFT(state[x, y], offsets[x, y])
 
     RETURN state
-------------------------------------------------------------
+----------------------------------------------------------------------------------------------
 π(state):
     # Create a copy of the state
     temp_state = Copy_of(state)
@@ -96,7 +96,7 @@ keccak_f(state, rounds):
             state[new_x, new_y] = temp_state[x, y]
 
     RETURN state
-------------------------------------------------------------
+----------------------------------------------------------------------------------------------
 χ(state):
     FOR y = 0 to 4:
         # Create a temporary copy of the line
@@ -107,7 +107,7 @@ keccak_f(state, rounds):
             state[x, y] = temp_row[x] XOR ((NOT temp_row[(x+1) mod 5]) AND temp_row[(x+2) mod 5])
 
     RETURN state
-------------------------------------------------------------
+----------------------------------------------------------------------------------------------
 ι(state, round_index):
     # RC constants defined in the Keccak specification
     RC[round_index] = Specific fixed values for each round
@@ -116,7 +116,7 @@ keccak_f(state, rounds):
     state[0, 0] = state[0, 0] XOR RC[round_index]
 
     RETURN state
-------------------------------------------------------------
+----------------------------------------------------------------------------------------------
 RC[] = 
 {
     0x0000000000000001L, 0x0000000000008082L, 0x800000000000808aL,
