@@ -1,8 +1,8 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2
+CXXFLAGS = -Wall -Wextra -Werror -pedantic -std=c++20 -Wold-style-cast
 TARGET = sha3
 
-SRC = main.cpp keccak.cpp sha3.cpp
+SRC = main.cpp keccak.cpp sha3.cpp readfile.cpp
 OBJ = $(SRC:.cpp=.o)
 
 all: $(TARGET)

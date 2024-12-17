@@ -9,7 +9,6 @@ SHA3(family):
         - output_length                          # output length in bits (224, 256, 384, 512) (l)
         - state_size = 1600                      # total size of state in bits (s)
         - rate = state_size - 2 * output_length  # rate (r = s - 2*l)
-        - capacity = state_size - rate           # capacity (c = s - r)
         - rounds = 24                            # number of Keccak rounds
 
     Initiate the `state` array to 0 (1600 bits)
@@ -127,6 +126,15 @@ RC[] =
     0x8000000000008003L, 0x8000000000008002L, 0x8000000000000080L,
     0x000000000000800aL, 0x800000008000000aL, 0x8000000080008081L,
     0x8000000000008080L, 0x0000000080000001L, 0x8000000080008008L
+};
+
+RHO_OFFSETS =
+{
+    0, 1, 62, 28, 27,
+    36, 44, 6, 55, 20,
+    3, 10, 43, 25, 39,
+    41, 45, 15, 21, 8,
+    18, 2, 61, 56, 14
 };
 ```
 

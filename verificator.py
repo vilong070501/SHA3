@@ -1,20 +1,51 @@
 import hashlib
 
-def compute_sha3_256(file_path):
-    # Créer un objet hash SHA3-256
-    sha3_hash = hashlib.sha3_256()
+def compute_sha3_224(file_path):
+    sha3_hash = hashlib.sha3_224()
 
-    # Ouvrir le fichier en mode binaire
     with open(file_path, 'rb') as file:
-        # Lire le fichier par petits morceaux
-        while chunk := file.read(8192):  # Lire 8192 octets à la fois
-            sha3_hash.update(chunk)  # Mettre à jour le hachage avec ce bloc
+        while chunk := file.read(8192):
+            sha3_hash.update(chunk)
 
-    # Retourner le hash sous forme hexadécimale
     return sha3_hash.hexdigest()
 
-# Exemple d'utilisation
-file_path = 'text.txt'  # Remplace par le chemin vers ton fichier
-hash_value = compute_sha3_256(file_path)
+def compute_sha3_256(file_path):
+    sha3_hash = hashlib.sha3_256()
 
-print(f'SHA3-256 Hash obtenu: {hash_value}')
+    with open(file_path, 'rb') as file:
+        while chunk := file.read(8192):
+            sha3_hash.update(chunk)
+
+    return sha3_hash.hexdigest()
+
+def compute_sha3_384(file_path):
+    sha3_hash = hashlib.sha3_384()
+
+    with open(file_path, 'rb') as file:
+        while chunk := file.read(8192):
+            sha3_hash.update(chunk)
+
+    return sha3_hash.hexdigest()
+
+def compute_sha3_512(file_path):
+    sha3_hash = hashlib.sha3_512()
+
+    with open(file_path, 'rb') as file:
+        while chunk := file.read(8192):
+            sha3_hash.update(chunk)
+
+    return sha3_hash.hexdigest()
+
+file_path = input("Filepath: ")
+
+hash_value = compute_sha3_224(file_path)
+print(f'SHA3-224 Hash: {hash_value}')
+
+hash_value = compute_sha3_256(file_path)
+print(f'SHA3-256 Hash: {hash_value}')
+
+hash_value = compute_sha3_384(file_path)
+print(f'SHA3-384 Hash: {hash_value}')
+
+hash_value = compute_sha3_512(file_path)
+print(f'SHA3-512 Hash: {hash_value}')
